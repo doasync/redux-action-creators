@@ -52,8 +52,8 @@ export const START = Symbol('START');
 export const SUCCESS = Symbol('SUCCESS');
 export const FAILURE = Symbol('FAILURE');
 
-export const asyncActionCreator = actionCreatorFactory(actionCreator, {
-  START, SUCCESS, FAILURE
+export const asyncActionCreator = actionCreatorFactory({
+  subTypes: { START, SUCCESS, FAILURE }
 });
 
 // Async action with redux-thunk
@@ -74,11 +74,13 @@ export const signIn = asyncActionCreator('signIn', payload => (dispatch) => {
 // Sync thunkActionCreator
 
 export const CALL = Symbol('CALL');
-export const thunkActionCreator = actionCreatorFactory(actionCreator, { CALL });
+export const thunkActionCreator = actionCreatorFactory({
+  subTypes: { CALL }
+});
 
 // Later in your code...
 
-export const displayError = thunkActionCreator('DISPLAY_ERROR', ({ payload }) => (dispatch) => {
+export const displayError = thunkActionCreator('DISPLAY_ERROR', payload => (dispatch) => {
   const { error, message } = payload;
   dispatch(displayError[CALL]());
   dispatch(openSnackbar({
@@ -88,17 +90,45 @@ export const displayError = thunkActionCreator('DISPLAY_ERROR', ({ payload }) =>
   }));
 });
 
-// Custom async action creator with sub-types
+// Custom async action creator with sub-types and prefix
 export const CREATE = Symbol('CREATE');
 export const READ = Symbol('READ');
 export const UPDATE = Symbol('UPDATE');
 export const DELETE = Symbol('DELETE');
 
-export const crudActionCreator = actionCreatorFactory(asyncActionCreator, {
-  CREATE, READ, UPDATE, DELETE
-}, '@@app/'); // You can use prefixes
+export const crudActionCreator = actionCreatorFactory({
+  actionCreator: asyncActionCreator, {
+  subTypes: { CREATE, READ, UPDATE, DELETE }
+  prefix: '@@app/'
+}); // You can use prefixes
 
-export const todo = crudActionCreator('todo');
+// Create async crud actionCreator
+const todo = crudActionCreator('todo');
+
+// Complex ajax action creator with map of sub-types
+export const REQUEST = Symbol('REQUEST');
+export const END = Symbol('SUCCESS');
+export const ERROR = Symbol('ERROR');
+export const NORMAL = Symbol('NORMAL');
+export const TIMEOUT = Symbol('TIMEOUT');
+export const CANCEL = Symbol('CANCEL');
+
+const _requestActionCreator = actionCreatorFactory({
+  subTypes: { START, SUCCESS, END }
+});
+
+const _errorActionCreator = actionCreatorFactory({
+  subTypes: { NORMAL, TIMEOUT, CANCEL, FAILURE }
+});
+
+export const ajaxActionCreator = actionCreatorFactory({
+  subTypes: [
+    [_requestActionCreator, { REQUEST }],
+    [_errorActionCreator, { ERROR }],
+  ]
+});
+
+const fetchUser = ajaxActionCreator('FETCH_USER')
 
 // In reducer:
 switch(action.type) {
@@ -116,6 +146,10 @@ switch(action.type) {
   case openDrawer[TYPE]:
     //...
   case closeDrawer[TYPE]:
+    //...
+  case fetchUser[REQUEST][START][$$]:
+    //...
+  case fetchUser[ERROR][NORMAL][$$]:
     //...
 }
 ```
