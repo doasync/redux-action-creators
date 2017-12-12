@@ -14,11 +14,12 @@ export const actionCreator = (type, fn) => {
   return Object.defineProperty($actionCreator, TYPE, { value: type });
 };
 
-export const actionCreatorFactory = (customActionCreator, subTypes, prefix = '') => (type, fn) => {
+export const actionCreatorFactory = (params = {}) => (type, fn) => {
+  const { actionsCreator: subActionsCreator, subTypes, prefix } = params;
   const $actionCreator = actionCreator(`${prefix}${type}`, fn);
   const subs = Object.entries(subTypes).reduce((result, [symbolName, symbol]) => {
     if (typeof symbol === 'symbol') {
-      result[symbol] = customActionCreator(`${prefix}${type}[${symbolName}]`);
+      result[symbol] = subActionsCreator(`${prefix}${type}[${symbolName}]`);
     } else {
       throw new Error('You should use symbols for subTypes');
     }
