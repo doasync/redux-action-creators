@@ -26,10 +26,9 @@ npm install --save redux-action-creators
 ## Usage
 
 ```javascript
-
 import {
   actionCreator,
-  START, SUCCESS, FAILURE,
+  TYPE, START, SUCCESS, FAILURE,
   asyncActionCreator
 } from 'redux-action-creators';
 
@@ -42,21 +41,29 @@ export const asyncActionCreator = actionCreatorFactory(actionCreator, {
   START, SUCCESS, FAILURE
 });
 
-// Async action creator with some functionality
-export const signOut = asyncActionCreator('SIGN_OUT', ({ payload }) => {
+// Normal action creator with some functionality
+export const openModal = actionCreator('OPEN_MODAL', payload => {
   console.log(payload);
+
+  // You can override standard action object:
+  return { type: openModal[TYPE], meta: { section: 'main' }, payload: null }
+});
+
+// Async action creator with some functionality
+export const signOut = asyncActionCreator('SIGN_OUT', (payload, meta) => {
+  console.log(payload, meta);
 });
 
 // Then just dispatch an action with some payload
 store.dispatch(signOut({ msg: 'Bye!' }));
 
-// With redux-thunk
-export const signIn = asyncActionCreator('signIn', ({ payload }) => (dispatch) => {
+// Async action with redux-thunk
+export const signIn = asyncActionCreator('signIn', payload => (dispatch) => {
   const { username, password } = payload;
 
   dispatch(signIn[START]());
 
-  return api.post(API_SIGN_IN, { username, password }).then((response) => {
+  api.post(API_SIGN_IN, { username, password }).then((response) => {
     const { token, email, avatar } = response.data;
     localStorage.setItem('auth_token', token);
     dispatch(signIn[SUCCESS]({ email, avatar }));
@@ -79,15 +86,16 @@ export const todo = crudActionCreator('todo');
 
 // In reducer:
 switch(action.type) {
-  case todo[CREATE][START].type:
+  case todo[CREATE][START][TYPE]:
     //...
-  case todo[CREATE][SUCCESS].type:
+  // You can use $$ alias for TYPE (import it first)
+  case todo[CREATE][SUCCESS][$$]:
     //...
-  case signIn[FAILURE].type:
+  case signIn[FAILURE][$$]:
     //...
-  case openDrawer.type:
+  case openDrawer[TYPE]:
   //...
-  case closeDrawer.type:
+  case closeDrawer[TYPE]:
   //...
 }
 ```

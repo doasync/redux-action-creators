@@ -1,17 +1,14 @@
+import { TYPE, START, SUCCESS, FAILURE } from './symbols';
 
 export const actionCreator = (type, fn) => {
   if (typeof type !== 'string' || !type) {
-    throw new Error('Action type string is required');
+    throw new Error('Action type is required [string]');
   }
   const $actionCreator = (payload, meta) => {
     const action = { type, payload, meta };
     return fn ? fn(action) || action : action;
   };
-  return Object.defineProperty(
-    $actionCreator,
-    'type',
-    { value: type }
-  );
+  return Object.defineProperty($actionCreator, TYPE, { value: type });
 };
 
 export const actionCreatorFactory = (customActionCreator, subTypes, prefix = '') => (type, fn) => {
@@ -26,10 +23,6 @@ export const actionCreatorFactory = (customActionCreator, subTypes, prefix = '')
   }, {});
   return Object.assign($actionCreator, subs);
 };
-
-export const START = Symbol('START');
-export const SUCCESS = Symbol('SUCCESS');
-export const FAILURE = Symbol('FAILURE');
 
 export const asyncActionCreator = actionCreatorFactory(actionCreator, {
   START, SUCCESS, FAILURE
