@@ -1,4 +1,6 @@
-import { TYPE, START, SUCCESS, FAILURE } from './symbols';
+
+export const TYPE = Symbol('TYPE');
+export const $$ = TYPE;
 
 export const actionCreator = (type, fn) => {
   if (typeof type !== 'string' || !type) {
@@ -24,7 +26,3 @@ export const actionCreatorFactory = (customActionCreator, subTypes, prefix = '')
   }, {});
   return Object.assign($actionCreator, subs);
 };
-
-export const asyncActionCreator = actionCreatorFactory(actionCreator, {
-  START, SUCCESS, FAILURE
-});

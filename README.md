@@ -27,35 +27,34 @@ npm install --save redux-action-creators
 
 ```javascript
 import {
+  TYPE
   actionCreator,
-  TYPE, START, SUCCESS, FAILURE,
-  asyncActionCreator
+  actionCreatorFactory
 } from 'redux-action-creators';
 
 // Normal action creators
 export const openDrawer = actionCreator('OPEN_DRAWER');
 export const closeDrawer = actionCreator('CLOSE_DRAWER');
 
-// asyncActionCreator (included in the package)
-export const asyncActionCreator = actionCreatorFactory(actionCreator, {
-  START, SUCCESS, FAILURE
-});
-
 // Normal action creator with some functionality
 export const openModal = actionCreator('OPEN_MODAL', payload => {
   console.log(payload);
 
   // You can override standard action object:
-  return { type: openModal[TYPE], meta: { section: 'main' }, payload: null }
-});
-
-// Async action creator with some functionality
-export const signOut = asyncActionCreator('SIGN_OUT', (payload, meta) => {
-  console.log(payload, meta);
+  // return { type: openModal[TYPE], meta: { section: 'main' }, payload: null }
 });
 
 // Then just dispatch an action with some payload
 store.dispatch(signOut({ msg: 'Bye!' }));
+
+// asyncActionCreator
+export const START = Symbol('START');
+export const SUCCESS = Symbol('SUCCESS');
+export const FAILURE = Symbol('FAILURE');
+
+export const asyncActionCreator = actionCreatorFactory(actionCreator, {
+  START, SUCCESS, FAILURE
+});
 
 // Async action with redux-thunk
 export const signIn = asyncActionCreator('signIn', payload => (dispatch) => {
@@ -70,6 +69,23 @@ export const signIn = asyncActionCreator('signIn', payload => (dispatch) => {
   }).catch(({ message }) => {
     dispatch(signIn[FAILURE]({ message }));
   });
+});
+
+// Sync thunkActionCreator
+
+export const CALL = Symbol('CALL');
+export const thunkActionCreator = actionCreatorFactory(actionCreator, { CALL });
+
+// Later in your code...
+
+export const displayError = thunkActionCreator('DISPLAY_ERROR', ({ payload }) => (dispatch) => {
+  const { error, message } = payload;
+  dispatch(displayError[CALL]());
+  dispatch(openSnackbar({
+    message: error
+      ? String(error)
+      : message || 'Unknown error'
+  }));
 });
 
 // Custom async action creator with sub-types
@@ -93,10 +109,14 @@ switch(action.type) {
     //...
   case signIn[FAILURE][$$]:
     //...
+  case displayError[CALL][TYPE]:
+    //...
+  case openSnackbar[TYPE]:
+    //...
   case openDrawer[TYPE]:
-  //...
+    //...
   case closeDrawer[TYPE]:
-  //...
+    //...
 }
 ```
 
