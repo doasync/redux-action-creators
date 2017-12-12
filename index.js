@@ -1,24 +1,30 @@
 
-export const actionCreatorFactory = (actionCreator, subTypes) => (name, fn) => {
-  const $actionCreator = actionCreator(name, fn);
+export const actionCreator = (type, fn) => {
+  if (typeof type !== 'string' || !type) {
+    throw new Error('Action type string is required');
+  }
+  const $actionCreator = (payload, meta) => {
+    const action = { type, payload, meta };
+    return fn ? fn(action) || action : action;
+  };
+  return Object.defineProperty(
+    $actionCreator,
+    'type',
+    { value: type }
+  );
+};
+
+export const actionCreatorFactory = (customActionCreator, subTypes, prefix = '') => (type, fn) => {
+  const $actionCreator = actionCreator(`${prefix}${type}`, fn);
   const subs = Object.entries(subTypes).reduce((result, [symbolName, symbol]) => {
     if (typeof symbol === 'symbol') {
-      result[symbol] = actionCreator(`${name}[${symbolName}]`);
+      result[symbol] = customActionCreator(`${prefix}${type}[${symbolName}]`);
     } else {
       throw new Error('You should use symbols for subTypes');
     }
     return result;
   }, {});
   return Object.assign($actionCreator, subs);
-};
-
-export const actionCreator = (name, fn) => {
-  const $actionCreator = (payload) => {
-    const action = { type: $actionCreator, payload };
-    return fn ? fn(action) || action : action;
-  };
-  $actionCreator.displayName = name;
-  return $actionCreator;
 };
 
 export const START = Symbol('START');

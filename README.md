@@ -34,8 +34,8 @@ import {
 } from 'redux-action-creators';
 
 // Normal action creators
-export const openDrawer = actionCreator('openDrawer');
-export const closeDrawer = actionCreator('closeDrawer');
+export const openDrawer = actionCreator('OPEN_DRAWER');
+export const closeDrawer = actionCreator('CLOSE_DRAWER');
 
 // asyncActionCreator (included in the package)
 export const asyncActionCreator = actionCreatorFactory(actionCreator, {
@@ -43,7 +43,7 @@ export const asyncActionCreator = actionCreatorFactory(actionCreator, {
 });
 
 // Async action creator with some functionality
-export const signOut = asyncActionCreator('signOut', ({ payload }) => {
+export const signOut = asyncActionCreator('SIGN_OUT', ({ payload }) => {
   console.log(payload);
 });
 
@@ -51,17 +51,17 @@ export const signOut = asyncActionCreator('signOut', ({ payload }) => {
 store.dispatch(signOut({ msg: 'Bye!' }));
 
 // With redux-thunk
-export const signIn = asyncActionCreator('signIn', ({ type, payload }) => (dispatch) => {
+export const signIn = asyncActionCreator('signIn', ({ payload }) => (dispatch) => {
   const { username, password } = payload;
 
-  dispatch(type[START]());
+  dispatch(signIn[START]());
 
   return api.post(API_SIGN_IN, { username, password }).then((response) => {
     const { token, email, avatar } = response.data;
     localStorage.setItem('auth_token', token);
-    dispatch(type[SUCCESS]({ email, avatar }));
+    dispatch(signIn[SUCCESS]({ email, avatar }));
   }).catch(({ message }) => {
-    dispatch(type[FAILURE]({ message }));
+    dispatch(signIn[FAILURE]({ message }));
   });
 });
 
@@ -79,15 +79,15 @@ export const todo = crudActionCreator('todo');
 
 // In reducer:
 switch(action.type) {
-  case todo[CREATE][START]:
+  case todo[CREATE][START].type:
     //...
-  case todo[CREATE][SUCCESS]:
+  case todo[CREATE][SUCCESS].type:
     //...
-  case signIn[FAILURE]:
+  case signIn[FAILURE].type:
     //...
-  case openDrawer:
+  case openDrawer.type:
   //...
-  case closeDrawer:
+  case closeDrawer.type:
   //...
 }
 ```
