@@ -8,7 +8,7 @@ export const actionCreator = (type, fn) => {
   }
   const $actionCreator = (payload, meta) => {
     const action = meta !== undefined ? { type, payload, meta } : { type, payload };
-    const result = fn !== undefined ? fn(action) : undefined;
+    const result = fn !== undefined ? fn(payload, meta) : undefined;
     return result !== undefined ? result : action;
   };
   return Object.defineProperty($actionCreator, TYPE, { value: type });
@@ -16,14 +16,14 @@ export const actionCreator = (type, fn) => {
 
 export const actionCreatorFactory = (params = {}) => (type, fn) => {
   const {
-    actionsCreator: subActionsCreator = actionCreator,
+    actionsCreator: subCreator = actionCreator,
     subTypes,
     prefix = ''
   } = params;
   const $actionCreator = actionCreator(`${prefix}${type}`, fn);
   const subs = Object.entries(subTypes).reduce((result, [symbolName, symbol]) => {
     if (typeof symbol === 'symbol') {
-      result[symbol] = subActionsCreator(`${prefix}${type}[${symbolName}]`);
+      result[symbol] = subCreator(`${prefix}${type}[${symbolName}]`);
     } else {
       throw new Error(`Sub-type ${symbolName} should be a symbol`);
     }
