@@ -14,20 +14,39 @@ export const actionCreator = (type, fn) => {
   return Object.defineProperty($actionCreator, TYPE, { value: type });
 };
 
+const createSubs = (subCreator, subTypes, parentType) => Object.entries(subTypes).reduce(
+  (result, [symbolName, symbol]) => {
+    if (typeof symbolName === 'string' && typeof symbol === 'symbol') {
+      result[symbol] = subCreator(`${parentType}[${symbolName}]`);
+    } else {
+      throw new Error('Sub-type item should have a string key and a symbol value');
+    }
+    return result;
+  },
+  {}
+);
+
 export const actionCreatorFactory = (params = {}) => (type, fn) => {
   const {
     actionsCreator: subCreator = actionCreator,
     subTypes,
     prefix = ''
   } = params;
-  const $actionCreator = actionCreator(`${prefix}${type}`, fn);
-  const subs = Object.entries(subTypes).reduce((result, [symbolName, symbol]) => {
-    if (typeof symbol === 'symbol') {
-      result[symbol] = subCreator(`${prefix}${type}[${symbolName}]`);
-    } else {
-      throw new Error(`Sub-type ${symbolName} should be a symbol`);
-    }
-    return result;
-  }, {});
-  return Object.assign($actionCreator, subs);
+
+  const parentType = `${prefix}${type}`;
+  const $actionCreator = actionCreator(parentType, fn);
+
+  if (Array.isArray(subTypes)) {
+    const subs = subTypes.reduce((result, [specSubCreator, specSubTypes]) => {
+      const specSubs = createSubs(specSubCreator, specSubTypes, parentType);
+      return Object.assign(result, specSubs);
+    }, {});
+    Object.assign($actionCreator, subs);
+  } else if (typeof subTypes === 'object' && subTypes !== null) {
+    const subs = createSubs(subCreator, subTypes, parentType);
+    Object.assign($actionCreator, subs);
+  } else {
+    throw new Error('subTypes should be an object or array');
+  }
+  return $actionCreator;
 };
