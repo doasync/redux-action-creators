@@ -40,8 +40,8 @@ export const closeDrawer = actionCreator('CLOSE_DRAWER');
 export const openModal = actionCreator('OPEN_MODAL', payload => {
   console.log(payload);
 
-  // You can override standard action object:
-  // return { type: openModal[TYPE], meta: { section: 'main' }, payload: null }
+  // You can override standard action object here:
+  // return { type: openModal[TYPE], meta: { section: 'main' } }
 });
 
 // Then just dispatch an action with some payload
@@ -49,11 +49,12 @@ store.dispatch(signOut({ msg: 'Bye!' }));
 
 // asyncActionCreator
 export const START = Symbol('START');
+export const END = Symbol('END');
 export const SUCCESS = Symbol('SUCCESS');
 export const FAILURE = Symbol('FAILURE');
 
 export const asyncActionCreator = actionCreatorFactory({
-  subTypes: { START, SUCCESS, FAILURE }
+  subTypes: { START, END, SUCCESS, FAILURE }
 });
 
 // Async action with redux-thunk
@@ -62,24 +63,28 @@ export const signIn = asyncActionCreator('signIn', payload => (dispatch) => {
 
   dispatch(signIn[START]());
 
-  api.post(API_SIGN_IN, { username, password }).then((response) => {
-    const { token, email, avatar } = response.data;
-    localStorage.setItem('auth_token', token);
-    dispatch(signIn[SUCCESS]({ email, avatar }));
-  }).catch(({ message }) => {
-    dispatch(signIn[FAILURE]({ message }));
-  });
+  // api is an axios instance with interceptors: const api = axios.create({ baseURL: apiRoot });
+  api.post(API_SIGN_IN, { username, password }).then(
+    (response) => {
+      const { token, email, avatar } = response.data;
+      localStorage.setItem('auth_token', token);
+      dispatch(signIn[END]());
+      dispatch(signIn[SUCCESS]({ email, avatar }));
+    },
+    (error) => {
+      dispatch(signIn[END]());
+      dispatch(signIn[FAILURE]({ error.message }));
+    }
+  );
 });
 
 // Sync thunkActionCreator
-
 export const CALL = Symbol('CALL');
 export const thunkActionCreator = actionCreatorFactory({
   subTypes: { CALL }
 });
 
 // Later in your code...
-
 export const displayError = thunkActionCreator('DISPLAY_ERROR', payload => (dispatch) => {
   const { error, message } = payload;
   dispatch(displayError[CALL]());
@@ -107,7 +112,6 @@ const todo = crudActionCreator('todo');
 
 // Complex ajax action creator with map of sub-types
 export const REQUEST = Symbol('REQUEST');
-export const END = Symbol('SUCCESS');
 export const ERROR = Symbol('ERROR');
 export const NORMAL = Symbol('NORMAL');
 export const TIMEOUT = Symbol('TIMEOUT');
@@ -137,8 +141,12 @@ switch(action.type) {
   // You can use $$ alias for TYPE (import it first)
   case todo[CREATE][SUCCESS][$$]:
     //...
-  case signIn[FAILURE][$$]:
-    //...
+  case signIn[START][$$]:
+    return { ...state, fetching: true };
+  case signIn[END][$$]:
+    return { ...state, fetching: false };
+  case signIn[SUCCESS][$$]:
+    return { ...state, user: action.payload };
   case displayError[CALL][TYPE]:
     //...
   case openSnackbar[TYPE]:
