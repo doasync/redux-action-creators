@@ -6,7 +6,8 @@ export const actionCreator = (type, fn) => {
   }
   const $actionCreator = (payload, meta) => {
     const action = { type, payload, meta };
-    return fn ? fn(action) || action : action;
+    const result = fn ? fn(action) : undefined;
+    return result !== undefined ? result : action;
   };
   return Object.defineProperty($actionCreator, TYPE, { value: type });
 };

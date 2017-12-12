@@ -80,7 +80,7 @@ export const DELETE = Symbol('DELETE');
 
 export const crudActionCreator = actionCreatorFactory(asyncActionCreator, {
   CREATE, READ, UPDATE, DELETE
-});
+}, '@@app/'); // You can use prefixes
 
 export const todo = crudActionCreator('todo');
 
