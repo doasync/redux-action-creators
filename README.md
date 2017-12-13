@@ -73,10 +73,17 @@ export const signIn = asyncActionCreator('signIn', payload => (dispatch) => {
     },
     (error) => {
       dispatch(signIn[END]());
-      dispatch(signIn[FAILURE]({ error.message }));
+      dispatch(signIn[FAILURE](error));
     }
   );
 });
+
+// You can write a helper for handling errors
+const asyncErrorHandler = ($actionCreator, dispatch) =>
+  (error) => {
+    dispatch($actionCreator[END]());
+    dispatch($actionCreator[FAILURE](error));
+  };
 
 // Sync thunkActionCreator
 export const CALL = Symbol('CALL');

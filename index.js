@@ -45,8 +45,7 @@ export const actionCreatorFactory = (params = {}) => (type, fn) => {
   } else if (typeof subTypes === 'object' && subTypes !== null) {
     const subs = createSubs(subCreator, subTypes, parentType);
     Object.assign($actionCreator, subs);
-  } else {
-    throw new Error('subTypes should be an object or array');
   }
+
   return $actionCreator;
 };
